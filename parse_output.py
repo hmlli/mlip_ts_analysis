@@ -40,13 +40,27 @@ def jsonl_dict_to_res_dict(parsed_dict):
     print(len(res_dict))
     return res_dict
 
-def parse_all_output(methods, dump=False):
+def modify_method_names(all_res):
+    update = {
+    "deepmd": "DeepMD",
+    "mattersim": "MatterSim",
+    "sevenn": "SevenNet",
+    "eqV2-M": "EquiformerV2"
+    }
+    for k, v in update.items():
+        all_res[v] = all_res.pop(k)
+    return all_res
+
+def parse_all_output(methods, modify_names=True, dump=False):
     all_res = {}
 
     for method in methods:
         jsonl_dict = parse_jsonl_output(method)
         res_dict = jsonl_dict_to_res_dict(jsonl_dict)
         all_res[method] = res_dict
+
+    if modify_names:
+        all_res = modify_method_names(all_res)
 
     if dump:
         dumpfn(all_res, "all_calc_res.json")
@@ -58,5 +72,6 @@ if __name__ == "__main__":
     methods=["DFT", "MACE", "GRACE", "mattersim", "deepmd", "eqV2-M", "sevenn", "CHGNet"]
     all_res = parse_all_output(
         methods=methods,
+        modify_names=True,
         dump=True
     )
