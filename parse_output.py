@@ -9,17 +9,26 @@ def parse_jsonl_output(method, output_dir=None):
     jsonl_files = [f for f in os.listdir(output_dir) if f"{method}" in f and f.endswith(".jsonl")]
     parsed_dict = {}
 
-    for file in jsonl_files:
-        file_path = os.path.join(output_dir, file)
-        with open(file_path, "r") as f:
-            for line in f:
-                try:
-                    data = json.loads(line)
-                    key = data.get("key")
-                    value = data.get("data")
-                    parsed_dict[key] = value
-                except json.JSONDecodeError:
-                    print(f"Skipping invalid JSON in {file_path}")
+    if jsonl_files:
+        for file in jsonl_files:
+            file_path = os.path.join(output_dir, file)
+            with open(file_path, "r") as f:
+                for line in f:
+                    try:
+                        data = json.loads(line)
+                        key = data.get("key")
+                        value = data.get("data")
+                        parsed_dict[key] = value
+                    except json.JSONDecodeError:
+                        print(f"Skipping invalid JSON in {file_path}")
+
+    else:
+        json_files = [f for f in os.listdir(output_dir) if f"{method}" in f and f.endswith(".json")]
+        for file in json_files:
+            file_path = os.path.join(output_dir, file)
+            with open(file_path, "r") as f:
+                data = json.load(f)
+                parsed_dict.update(data)
 
     print(method, len(parsed_dict))
     return parsed_dict
@@ -63,13 +72,13 @@ def parse_all_output(methods, modify_names=True, dump=False):
         all_res = modify_method_names(all_res)
 
     if dump:
-        dumpfn(all_res, "all_calc_res.json")
+        dumpfn(all_res, "all_calc_res_2.json")
 
     return all_res
 
 
 if __name__ == "__main__":
-    methods=["DFT", "MACE", "GRACE", "mattersim", "deepmd", "eqV2-M", "sevenn", "CHGNet"]
+    methods=["DFT", "MACE", "GRACE", "mattersim", "deepmd", "eqV2-M", "sevenn", "CHGNet", "MatPES-TensorNet"]
     all_res = parse_all_output(
         methods=methods,
         modify_names=True,

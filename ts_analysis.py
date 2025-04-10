@@ -123,11 +123,14 @@ class TSAnlysis:
         self.populate_analysis_data(
             barrier_type=barrier_type
         )
+        self.generate_analysis_df()
 
     def generate_analysis_df(
         self,
         additional_data: dict[str, dict] = None,
         operate: bool = True,
+        last_active_species: str = "Li",
+        randomize_rows: bool = False,
     ):
         df_keys = [
             "flattened_e_above_min",
@@ -147,19 +150,25 @@ class TSAnlysis:
         # delete rows that have -float("inf") as the DFT value since that's the min in hop
         df.replace([-float("inf")], np.nan, inplace=True)
         df.dropna(inplace=True)
-        self.analysis_df = pd.DataFrame(df_dicts)
+        self.analysis_df = df
         if operate:
-            self.operate_on_anlaysis_df()
+            self.operate_on_anlaysis_df(
+                last_active_species=last_active_species,
+                randomize_row=randomize_rows
+            )
 
     def operate_on_anlaysis_df(
         self,
         last_active_species: str = "Li",
+        randomize_row: bool = True
     ):
         self.analysis_df["active_species"] = self.analysis_df.index.to_series().apply(self.get_active_ion_from_flattened_id)
         self.analysis_df = self.analysis_df.sort_values(by="active_species", key=lambda x: x == last_active_species, ascending=True)
         if "composition" in self.analysis_df.keys():
             self.analysis_df["heaviest_element"] = self.analysis_df["composition"].apply(self._extract_heaviest_element)
             self.analysis_df["heaviest_element_bin"] = self.analysis_df["heaviest_element"].apply(self._bin_heavy_element)
+        if randomize_row:
+            self.analysis_df = self.analysis_df.sample(frac=1)
 
     def get_active_ion_from_flattened_id(
         self,
@@ -196,18 +205,20 @@ class TSAnlysis:
             y=mlip_column_name,
             hue=hue,
             data=df,
-            palette='Set1',
+            palette='colorblind',
             s=kwargs["s"] if "s" in kwargs else 25,
-            edgecolor='black',
+            linewidth=0,
+            alpha=kwargs["alpha"] if "alpha" in kwargs else 0.5,
             ax=ax
         )
 
-        max_val = 5.2
-        ax.plot([0, max_val], [0, max_val], linestyle='--', color='gray')
+        max_val = 5.25
+        ax.plot([0, max_val], [0, max_val], linestyle='--', color='black')
 
         ax.set_xlim(None, max_val)
         ax.set_xlabel("DFT-calculated E above min")
-        ax.set_ylabel(f"{mlip_method}-calculated E above min")
+        ax.set_ylabel(f"{mlip_method}-static E above min")
+        ax.set_title(f"{mlip_method} Energy Benchmark")
         ax.legend(title=hue)
 
         return ax
@@ -250,8 +261,8 @@ class TSAnlysis:
 
         x = list(set(diff_distribution))
         height = [diff_distribution.count(value) for value in x]
-        plt.xlabel("Error in TS shape curve")
-        plt.ylabel("Count")
+        plt.xlabel("Error in TS shape")
+        plt.ylabel("Number of migration events")
         plt.title(f"{mlip_method} TS Shape Benchmark")
         return plt.bar(
             x,
@@ -292,6 +303,7 @@ class TSAnlysis:
             x=x,
             y=y,
             color_bar=False,
+            cmap="viridis",
             **kwargs
         )
 
