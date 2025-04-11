@@ -2,14 +2,16 @@ from monty.serialization import loadfn, dumpfn
 import json
 import os
 
-def parse_jsonl_output(method, output_dir=None):
+def parse_output(method, output_dir=None):
+
     if not output_dir:
         output_dir = method
 
     jsonl_files = [f for f in os.listdir(output_dir) if f"{method}" in f and f.endswith(".jsonl")]
+    json_files = [f for f in os.listdir(output_dir) if f"{method}" in f and f.endswith(".json")]
     parsed_dict = {}
 
-    if jsonl_files:
+    def process_jsonl_files(jsonl_files):
         for file in jsonl_files:
             file_path = os.path.join(output_dir, file)
             with open(file_path, "r") as f:
@@ -22,18 +24,23 @@ def parse_jsonl_output(method, output_dir=None):
                     except json.JSONDecodeError:
                         print(f"Skipping invalid JSON in {file_path}")
 
-    else:
-        json_files = [f for f in os.listdir(output_dir) if f"{method}" in f and f.endswith(".json")]
+    def process_json_files(json_files):
         for file in json_files:
             file_path = os.path.join(output_dir, file)
             with open(file_path, "r") as f:
                 data = json.load(f)
                 parsed_dict.update(data)
 
+    if jsonl_files:
+        process_jsonl_files(jsonl_files)
+    
+    if json_files:
+        process_json_files(json_files)
+
     print(method, len(parsed_dict))
     return parsed_dict
 
-def jsonl_dict_to_res_dict(parsed_dict):
+def output_dict_to_res_dict(parsed_dict):
     res_dict = {}
 
     for key, energy in parsed_dict.items():
@@ -64,8 +71,8 @@ def parse_all_output(methods, modify_names=True, dump=False):
     all_res = {}
 
     for method in methods:
-        jsonl_dict = parse_jsonl_output(method)
-        res_dict = jsonl_dict_to_res_dict(jsonl_dict)
+        jsonl_dict = parse_output(method)
+        res_dict = output_dict_to_res_dict(jsonl_dict)
         all_res[method] = res_dict
 
     if modify_names:
