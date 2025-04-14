@@ -79,7 +79,7 @@ def parse_all_output(methods, modify_names=True, dump=False):
         all_res = modify_method_names(all_res)
 
     if dump:
-        dumpfn(all_res, "all_calc_res_2.json")
+        dumpfn(all_res, "all_calc_res.json")
 
     return all_res
 

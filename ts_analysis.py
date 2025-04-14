@@ -8,7 +8,7 @@ import pymatviz as pmv
 from pymatgen.core import Composition
 from emmet.core.neb import NebPathwayResult, NebResult
 
-class TSAnlysis:
+class TSAnalysis:
     def __init__(
         self,
         data: dict,
