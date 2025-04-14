@@ -9,8 +9,8 @@ from pymatgen.io.ase import AseAtomsAdaptor
 import multiprocessing
 
 # set up
-mlip_method = "chgnet"
-input_file = "all_structures_no_energy.json"
+mlip_method = "chgnet" # name of MLIP to run
+input_file = "all_structures_no_energy.json" # dumpfn'd file that has {key: Structure} pairs
 output_dir = Path(f"{mlip_method}/")
 if not output_dir.exists():
     output_dir.mkdir()
@@ -90,6 +90,5 @@ def production_run(nproc):
 if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO, force=True)
-    # multiprocessing.set_start_method("fork")
 
     production_run(nproc=2)
